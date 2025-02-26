@@ -1,0 +1,242 @@
+
+<!DOCTYPE HTML>
+
+<html>
+	<head>
+		<title>PLANET</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<!-- Added temperature display styles -->
+		<style>
+			.temp-container {
+				max-width: 600px;
+				margin: 0 auto;
+				padding: 20px;
+				text-align: center;
+			}
+			.temp-display {
+				font-size: 48px;
+				font-weight: bold;
+				margin: 20px 0;
+			}
+			.device-info {
+				background-color: rgba(255, 255, 255, 0.1);
+				padding: 15px;
+				border-radius: 5px;
+				margin: 0 auto;
+				max-width: 80%;
+			}
+		</style>
+	</head>
+	<body class="landing is-preload">
+
+		<!-- Page Wrapper -->
+		<div id="page-wrapper" >
+
+			<!-- Header -->
+			<header id="header" class="alt">
+				<h1><a href="index.html">Planet</a></h1>
+			</header>
+
+			<!-- Banner -->
+			<section id="banner" style="background-image: url('images/planets.jpg');">
+				<div class="inner">
+					<h2>Planet</h2>
+					<p>A smart device to take care of your needs<br />
+				</div>
+				<a href="#one" class="more scrolly">Learn More</a>
+			</section>
+
+			<!-- <script>
+				function sendAPIRequest() {
+					var xhr = new XMLHttpRequest();
+					xhr.open("POST", "https://api.particle.io/v1/devices/3a0022000c47313037363132/cF_setMode?access_token=d5c01d0167e5d16bd7e18256adfa09d44dfc390b");
+					xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+					xhr.onreadystatechange = function() {
+						if (xhr.readyState === 4 && xhr.status === 200) {
+							console.log("Ring_Doorbell"); // Do something with the response
+						}
+					};
+					var requestBody = "value=Ring_Doorbell";
+					xhr.send(requestBody);
+				}
+			</script> -->
+
+			<!-- One -->
+			<section id="one" class="wrapper style1 special">
+				<div class="inner">
+					<header class="major">
+						<h2>Moisture Sensor and Temperature Reading IoT device </h2>
+						<p><br />
+							You can visualize the readings and data using the software below.
+						<br>
+					</header>
+					
+					<!-- SENSOR DISPLAY INTEGRATION STARTS HERE -->
+					<!-- Device information card -->
+					<div class="device-info" id="deviceInfo">
+						<h4>Device Information</h4>
+						<p>Loading device information...</p>
+					</div>
+
+					
+					<div class="sensor-container">
+						<h3>Current Readings</h3>
+						
+					
+						
+						<!-- Grid layout for temperature and moisture side by side -->
+						<div class="sensor-grid">
+							<!-- Temperature card -->
+							<div class="sensor-card">
+								<h4>Temperature</h4>
+								<div class="reading-display" id="temperature">--</div>
+							</div>
+							
+							<!-- Moisture card -->
+							<div class="sensor-card">
+								<h4>Soil Moisture</h4>
+								<div class="reading-display" id="moisture">--</div>
+							</div>
+						</div>
+						
+
+					</div>
+					
+					<script>
+						// Global variable to store device information
+						let deviceData = {};
+						
+						// Function to fetch and display temperature data
+						async function fetchTemperature() {
+							try {
+								// Fetch from the Particle API for temperature
+								const response = await fetch('https://api.particle.io/v1/devices/3a0022000c47313037363132/CF_temp?access_token=d5c01d0167e5d16bd7e18256adfa09d44dfc390b');
+								const data = await response.json();
+								
+								// Store device information for later use
+								deviceData = {
+									name: data.coreInfo.name,
+									deviceID: data.coreInfo.deviceID,
+									lastHeard: data.coreInfo.last_heard,
+									connected: data.coreInfo.connected,
+									productId: data.coreInfo.product_id
+								};
+								
+								// Update the temperature display with just the result value
+								const tempElement = document.getElementById('temperature');
+								tempElement.textContent = `${data.result.toFixed(1)}°C`;
+								
+								// Update device info
+								updateDeviceInfo();
+								
+							} catch (error) {
+								console.error('Error fetching temperature data:', error);
+								document.getElementById('temperature').textContent = 'Error';
+							}
+						}
+						
+						// Function to fetch and display moisture data
+						async function fetchMoisture() {
+							try {
+								// Fetch from the Particle API for soil moisture using provided URL
+								const response = await fetch('https://api.particle.io/v1/devices/3a0022000c47313037363132/CF_soil_reading?access_token=a36e40950ccc71c4035dd4c25bc4714305cbb46f');
+								const data = await response.json();
+								
+								// Update the moisture display with the result value
+								const moistureElement = document.getElementById('moisture');
+								
+								// Assuming the moisture reading is a percentage
+								moistureElement.textContent = `${data.result.toFixed(1)}%`;
+								
+							} catch (error) {
+								console.error('Error fetching moisture data:', error);
+								document.getElementById('moisture').textContent = 'Error';
+							}
+						}
+						
+						// Function to update device information display
+						function updateDeviceInfo() {
+							const deviceElement = document.getElementById('deviceInfo');
+							
+							// Only update if we have device data
+							if (Object.keys(deviceData).length > 0) {
+								// Format the date string
+								const lastHeardDate = new Date(deviceData.lastHeard);
+								const formattedDate = lastHeardDate.toLocaleString();
+								
+								// Set status indicator class based on connection status
+								const statusClass = deviceData.connected ? 'status-connected' : 'status-disconnected';
+								
+								// Update the HTML
+								deviceElement.innerHTML = `
+									<h4>Device Information</h4>
+									<p><strong>Device Name:</strong> ${deviceData.name}</p>
+									<p><strong>Device ID:</strong> ${deviceData.deviceID}</p>
+									<p><strong>Last Updated:</strong> ${formattedDate}</p>
+									<p>
+										<strong>Status:</strong> 
+										<span class="status-indicator ${statusClass}"></span>
+										${deviceData.connected ? 'Connected' : 'Disconnected'}
+									</p>
+									<p><strong>Product ID:</strong> ${deviceData.productId}</p>
+								`;
+							}
+						}
+						
+						// Function that fetches both sensor data
+						function fetchAllSensorData() {
+							fetchTemperature();
+							fetchMoisture();
+						}
+
+						// Fetch data immediately when page loads
+						fetchAllSensorData();
+						
+						// Set up periodic data refresh every 5 seconds
+						setInterval(fetchAllSensorData, 5000);
+					</script>
+					<!-- SENSOR DISPLAY INTEGRATION ENDS HERE -->
+					
+				</div>
+			</section>
+
+			<!-- Two
+			<section id="two" class="wrapper alt style2">
+				<section class="spotlight">
+					<div class="image"><img src="images/Grove.jpg" alt="" /></div><div class="content">
+						<h2>Meet the Grove Display ! <br>
+							 </h2>
+						<p><form action="https://api.particle.io/v1/devices/3a0022000c47313037363132/cF_setCustomMessage?access_token=d5c01d0167e5d16bd7e18256adfa09d44dfc390b" method="POST">
+							<input type="text" name="args" value=""><br>
+							<input type="submit" value="SEND" >
+						  </form></p>
+					</div>
+				</section>  -->
+			
+			<!-- CTA  -->
+			<section id="cta" class="wrapper style4" style="background-image: url('images/planets.jpg');">
+				<div class="inner">
+					<header>
+						<h2>Pre Order is now open</h2>
+						<p>Sign Up Today</p>
+					</header>
+					<ul class="actions stacked">
+						<li><a href="#" class="button fit primary">Pre Order Now</a></li>
+					</ul>
+				</div>
+			</section> 
+
+		<!-- Scripts -->
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/jquery.scrollex.min.js"></script>
+		<script src="assets/js/jquery.scrolly.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
